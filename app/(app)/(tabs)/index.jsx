@@ -1,51 +1,209 @@
-import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
+import { AnalyticsSummary } from '@/components/dashboard/AnalyticsSummary';
+import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
+import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
+import { MonthPicker } from '@/components/dashboard/MonthPicker';
+import { PartitionPieChart } from '@/components/dashboard/PartitionPieChart';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { getCurrentMonth, formatMonthLabel } from '@/lib/analytics/dateRange';
+import { buildPartitionChartData } from '@/lib/analytics/partitions';
+import {
+  filterTransactionsByCurrency,
+  filterTransactionsByMonth,
+  getAccountBalanceForCurrency,
+  getUniqueCurrencies,
+  sumByCategory,
+  sumByType,
+} from '@/lib/analytics/transactions';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logout } from '@/store/slices/authSlice';
+import {
+  appApi,
+  useGetBankAccountsQuery,
+  useGetTransactionsQuery,
+} from '@/store/api/appApi';
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
-  const { user, isLoading } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
+  const { data: transactions = [], isLoading: transactionsLoading } =
+    useGetTransactionsQuery();
+  const { data: accounts = [], isLoading: accountsLoading } = useGetBankAccountsQuery();
 
-  const handleLogout = async () => {
-    const result = await dispatch(logout());
-    if (logout.fulfilled.match(result)) {
-      router.replace('/(auth)/login');
+  const [monthState, setMonthState] = useState(getCurrentMonth);
+  const [selectedCurrency, setSelectedCurrency] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [partitionsByAccount, setPartitionsByAccount] = useState({});
+
+  const currencies = useMemo(() => getUniqueCurrencies(accounts), [accounts]);
+
+  useEffect(() => {
+    if (currencies.length && !selectedCurrency) {
+      setSelectedCurrency(currencies[0]);
     }
-  };
+  }, [currencies, selectedCurrency]);
+
+  useEffect(() => {
+    if (accounts.length && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].$id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  useEffect(() => {
+    if (!accounts.length) return;
+
+    Promise.all(
+      accounts.map((account) =>
+        dispatch(appApi.endpoints.getPartitions.initiate(account.$id))
+      )
+    ).then((results) => {
+      const map = {};
+      results.forEach((result, index) => {
+        map[accounts[index].$id] = result.data ?? [];
+      });
+      setPartitionsByAccount(map);
+    });
+  }, [accounts, dispatch]);
+
+  const monthTransactions = useMemo(
+    () =>
+      filterTransactionsByMonth(
+        transactions,
+        monthState.year,
+        monthState.month
+      ),
+    [transactions, monthState]
+  );
+
+  const currencyTransactions = useMemo(
+    () =>
+      filterTransactionsByCurrency(
+        monthTransactions,
+        selectedCurrency,
+        accounts
+      ),
+    [monthTransactions, selectedCurrency, accounts]
+  );
+
+  const totals = useMemo(
+    () => sumByType(currencyTransactions),
+    [currencyTransactions]
+  );
+
+  const incomeData = useMemo(
+    () => sumByCategory(currencyTransactions, 'income'),
+    [currencyTransactions]
+  );
+
+  const expenseData = useMemo(
+    () => sumByCategory(currencyTransactions, 'expense'),
+    [currencyTransactions]
+  );
+
+  const selectedAccount = accounts.find((account) => account.$id === selectedAccountId);
+  const partitionData = useMemo(
+    () =>
+      buildPartitionChartData(
+        selectedAccount,
+        partitionsByAccount[selectedAccountId] ?? []
+      ),
+    [selectedAccount, partitionsByAccount, selectedAccountId]
+  );
+
+  const balance = useMemo(
+    () => getAccountBalanceForCurrency(accounts, selectedCurrency),
+    [accounts, selectedCurrency]
+  );
+
+  const accountsForCurrency = accounts.filter(
+    (account) => account.currency === selectedCurrency
+  );
+
+  useEffect(() => {
+    if (!accountsForCurrency.length) return;
+    const stillValid = accountsForCurrency.some(
+      (account) => account.$id === selectedAccountId
+    );
+    if (!stillValid) {
+      setSelectedAccountId(accountsForCurrency[0].$id);
+    }
+  }, [accountsForCurrency, selectedAccountId]);
+
+  const isLoading = transactionsLoading || accountsLoading;
+  const monthLabel = formatMonthLabel(monthState.year, monthState.month);
+  const hasMonthData = currencyTransactions.length > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
-      <View className="flex-1 px-6 pt-8">
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white">
-          Dashboard
-        </Text>
-        <Text className="mt-2 text-base text-gray-500 dark:text-gray-400">
-          Welcome back, {user?.name || user?.email}
-        </Text>
+    <ScreenContainer>
+      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+        <ScreenHeader
+          title="Dashboard"
+          subtitle={`Welcome back, ${user?.name || user?.email || 'there'}`}
+        />
 
-        <View className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
-          <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-            Expense Tracker
-          </Text>
-          <Text className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Your expense tracking features will appear here.
-          </Text>
-        </View>
+        <MonthPicker
+          year={monthState.year}
+          month={monthState.month}
+          onChange={setMonthState}
+        />
 
-        <Pressable
-          className="mt-8 items-center rounded-xl bg-red-500 py-4 active:bg-red-600"
-          onPress={handleLogout}
-          disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-base font-semibold text-white">Log out</Text>
-          )}
-        </Pressable>
-      </View>
-    </SafeAreaView>
+        <CurrencyFilter
+          currencies={currencies}
+          value={selectedCurrency}
+          onChange={setSelectedCurrency}
+        />
+
+        {isLoading ? (
+          <View className="mt-12 items-center">
+            <ActivityIndicator size="large" color="#2563eb" />
+          </View>
+        ) : (
+          <>
+            {selectedCurrency ? (
+              <AnalyticsSummary
+                totals={totals}
+                balance={balance}
+                currency={selectedCurrency}
+              />
+            ) : null}
+
+            {!hasMonthData ? (
+              <View className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+                <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  No transactions in {monthLabel}
+                  {selectedCurrency ? ` for ${selectedCurrency}` : ''}
+                </Text>
+              </View>
+            ) : null}
+
+            <CategoryPieChart
+              title="Income by category"
+              data={incomeData}
+              currency={selectedCurrency}
+              emptyMessage="No income this month"
+            />
+
+            <CategoryPieChart
+              title="Expense by category"
+              data={expenseData}
+              currency={selectedCurrency}
+              emptyMessage="No expenses this month"
+            />
+
+            <PartitionPieChart
+              accounts={accountsForCurrency}
+              selectedAccountId={selectedAccountId}
+              onSelectAccount={setSelectedAccountId}
+              data={partitionData}
+              currency={selectedAccount?.currency ?? selectedCurrency}
+            />
+
+            <View className="h-8" />
+          </>
+        )}
+      </ScrollView>
+    </ScreenContainer>
   );
 }
