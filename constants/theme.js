@@ -1,49 +1,60 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const palette = {
+  primary: '#133458',
+  primaryLight: '#E8F0F8',
+  income: '#16A34A',
+  incomeLight: '#DCFCE7',
+  expense: '#DC2626',
+  expenseLight: '#FEE2E2',
+  warning: '#F59E0B',
+  warningLight: '#FEF3C7',
+  background: '#F8FAFC',
+  card: '#FFFFFF',
+  text: '#0F172A',
+  textSecondary: '#64748B',
+  border: '#E2E8F0',
+  darkBackground: '#0F172A',
+  darkCard: '#1E293B',
+  darkBorder: '#334155',
+  darkText: '#F8FAFC',
+  darkTextSecondary: '#94A3B8',
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: palette.text,
+    background: palette.background,
+    card: palette.card,
+    border: palette.border,
+    tint: palette.primary,
+    icon: palette.textSecondary,
+    tabIconDefault: palette.textSecondary,
+    tabIconSelected: palette.primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: palette.darkText,
+    background: palette.darkBackground,
+    card: palette.darkCard,
+    border: palette.darkBorder,
+    tint: palette.primaryLight,
+    icon: palette.darkTextSecondary,
+    tabIconDefault: palette.darkTextSecondary,
+    tabIconSelected: palette.primaryLight,
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    sans: 'system-ui',
-    serif: 'ui-serif',
-    rounded: 'ui-rounded',
-    mono: 'ui-monospace',
+export const NavigationTheme = {
+  light: {
+    primary: palette.primary,
+    background: palette.background,
+    card: palette.card,
+    text: palette.text,
+    border: palette.border,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  dark: {
+    primary: palette.primaryLight,
+    background: palette.darkBackground,
+    card: palette.darkCard,
+    text: palette.darkText,
+    border: palette.darkBorder,
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+};

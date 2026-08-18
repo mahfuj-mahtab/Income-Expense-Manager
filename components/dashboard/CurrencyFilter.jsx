@@ -1,15 +1,14 @@
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { Chip } from '@/components/ui/Chip';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 
 export function CurrencyFilter({ currencies, value, onChange }) {
   if (currencies.length <= 1) return null;
 
   return (
     <View className="mt-4">
-      <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Currency
-      </Text>
+      <SectionHeader title="Currency" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View className="flex-row gap-2">
           {currencies.map((currency) => (

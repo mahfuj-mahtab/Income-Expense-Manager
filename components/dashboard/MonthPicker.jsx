@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { formatMonthLabel, isFutureMonth, shiftMonth } from '@/lib/analytics/dateRange';
 
 export function MonthPicker({ year, month, onChange }) {
@@ -17,20 +18,24 @@ export function MonthPicker({ year, month, onChange }) {
   };
 
   return (
-    <View className="mt-4 flex-row items-center justify-between rounded-2xl border border-gray-200/80 bg-white px-2 py-2 shadow-card dark:border-gray-800 dark:bg-gray-900">
+    <View className="mt-4 flex-row items-center justify-between rounded-2xl border border-border bg-surface px-2 py-2 shadow-card dark:border-border-dark dark:bg-surface-card">
       <Pressable
-        className="rounded-xl px-4 py-2 active:bg-gray-100 dark:active:bg-gray-800"
-        onPress={handlePrev}>
-        <Text className="text-lg font-semibold text-brand-600">←</Text>
+        className="rounded-xl px-3 py-2 active:bg-primary-50 dark:active:bg-primary-600/20"
+        onPress={handlePrev}
+        accessibilityLabel="Previous month">
+        <IconSymbol name="chevron.left" size={22} color="#133458" />
       </Pressable>
-      <Text className="text-base font-semibold text-gray-900 dark:text-white">
+      <Text className="text-base font-semibold text-content dark:text-white">
         {formatMonthLabel(year, month)}
       </Text>
       <Pressable
-        className={`rounded-xl px-4 py-2 ${canGoNext ? 'active:bg-gray-100 dark:active:bg-gray-800' : 'opacity-30'}`}
+        className={`rounded-xl px-3 py-2 ${
+          canGoNext ? 'active:bg-primary-50 dark:active:bg-primary-600/20' : 'opacity-30'
+        }`}
         onPress={handleNext}
-        disabled={!canGoNext}>
-        <Text className="text-lg font-semibold text-brand-600">→</Text>
+        disabled={!canGoNext}
+        accessibilityLabel="Next month">
+        <IconSymbol name="chevron.right" size={22} color="#133458" />
       </Pressable>
     </View>
   );

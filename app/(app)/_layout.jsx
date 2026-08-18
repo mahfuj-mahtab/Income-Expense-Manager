@@ -1,15 +1,19 @@
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
+import { palette } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAppSelector } from '@/store/hooks';
 
 export default function AppLayout() {
-  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isLoading, user } = useAppSelector((state) => state.auth);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-gray-900">
-        <ActivityIndicator size="large" color="#2563eb" />
+      <View className="flex-1 items-center justify-center bg-surface-bg dark:bg-surface-dark">
+        <ActivityIndicator size="large" color={palette.primary} />
       </View>
     );
   }
@@ -19,9 +23,24 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack key={user?.$id} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="account/[id]" />
+      <Stack.Screen
+        name="account/[id]"
+        options={{
+          headerShown: true,
+          headerBackTitle: 'Back',
+          headerTintColor: palette.primary,
+          headerStyle: {
+            backgroundColor: isDark ? palette.darkCard : palette.background,
+          },
+          headerTitleStyle: {
+            color: isDark ? palette.darkText : palette.text,
+          },
+          headerShadowVisible: false,
+          title: 'Account',
+        }}
+      />
     </Stack>
   );
 }

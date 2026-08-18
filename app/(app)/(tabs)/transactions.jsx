@@ -1,24 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
-import { Card } from '@/components/ui/Card';
+import { TransactionRow } from '@/components/transactions/TransactionRow';
 import { ChipPicker } from '@/components/ui/ChipPicker';
+import { DatePickerField } from '@/components/ui/DatePickerField';
+import { DateGroupHeader } from '@/components/ui/ScreenDecor';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Fab } from '@/components/ui/Fab';
+import { FormField } from '@/components/ui/FormField';
+import { ModalSheet } from '@/components/ui/ModalSheet';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
+import { ListItemSkeleton } from '@/components/ui/Skeleton';
 import { getPresetCategoriesByType } from '@/constants/presetCategories';
-import { formatCurrency } from '@/lib/accounts/formatCurrency';
+import { groupByDate } from '@/lib/ui/groupByDate';
 import { useAppDispatch } from '@/store/hooks';
 import {
   appApi,
@@ -36,7 +40,7 @@ function todayISO() {
 
 export default function TransactionsScreen() {
   const dispatch = useAppDispatch();
-  const { data: transactions = [], isLoading, error } = useGetTransactionsQuery();
+  const { data: transactions = [], isLoading, error, refetch } = useGetTransactionsQuery();
   const { data: accounts = [] } = useGetBankAccountsQuery();
   const { data: customCategories = [] } = useGetCustomCategoriesQuery();
 
@@ -52,6 +56,7 @@ export default function TransactionsScreen() {
   const [partitionMap, setPartitionMap] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [type, setType] = useState('expense');
   const [categoryId, setCategoryId] = useState('');
@@ -107,6 +112,11 @@ export default function TransactionsScreen() {
     id: p.$id,
     name: p.name,
   }));
+
+  const groupedTransactions = useMemo(
+    () => groupByDate(transactions),
+    [transactions]
+  );
 
   const resetForm = () => {
     setType('expense');
@@ -199,30 +209,31 @@ export default function TransactionsScreen() {
   const getAccountCurrency = (id) =>
     accounts.find((a) => a.$id === id)?.currency ?? 'USD';
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
   return (
     <ScreenContainer>
       <View className="flex-1 px-6 pt-6">
         <ScreenHeader
           title="Transactions"
-          subtitle="Track income and expenses by partition"
-          action={
-            <PrimaryButton
-              label="+ Add"
-              onPress={openCreateModal}
-              className="px-4 py-2"
-            />
-          }
+          subtitle={`${transactions.length} recorded · green income, red expenses`}
         />
 
         {error && !modalVisible ? (
-          <Text className="mt-4 text-sm text-red-500">
+          <Text className="mt-4 text-sm font-medium text-expense-600 dark:text-expense-500">
             {error?.data || error?.error || 'Failed to load transactions'}
           </Text>
         ) : null}
 
         {isLoading && transactions.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#2563eb" />
+          <View className="mt-6 gap-3">
+            <ListItemSkeleton />
+            <ListItemSkeleton />
+            <ListItemSkeleton />
           </View>
         ) : transactions.length === 0 ? (
           <EmptyState
@@ -232,210 +243,168 @@ export default function TransactionsScreen() {
             onAction={openCreateModal}
           />
         ) : (
-          <ScrollView className="mt-6" showsVerticalScrollIndicator={false}>
-            <View className="gap-3">
-              {transactions.map((transaction) => {
-                const currency = getAccountCurrency(transaction.bankAccountId);
-                const isIncome = transaction.type === 'income';
-                return (
-                  <Card key={transaction.$id}>
-                    <Pressable onPress={() => openEditModal(transaction)}>
-                      <View className="flex-row items-start justify-between">
-                        <View className="flex-1 pr-3">
-                          <View className="flex-row items-center gap-2">
-                            <View
-                              className={`rounded-full px-2 py-0.5 ${
-                                isIncome
-                                  ? 'bg-income-50 dark:bg-income-500/10'
-                                  : 'bg-expense-50 dark:bg-expense-500/10'
-                              }`}>
-                              <Text
-                                className={`text-xs font-semibold uppercase ${
-                                  isIncome ? 'text-income-600' : 'text-expense-600'
-                                }`}>
-                                {transaction.type}
-                              </Text>
-                            </View>
-                            <Text className="text-sm text-gray-500 dark:text-gray-400">
-                              {transaction.date}
-                            </Text>
-                          </View>
-                          <Text className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
-                            {transaction.categoryName}
-                          </Text>
-                          <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {getAccountName(transaction.bankAccountId)} ·{' '}
-                            {partitionMap[transaction.partitionId] || 'Partition'}
-                          </Text>
-                          {transaction.note ? (
-                            <Text className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                              {transaction.note}
-                            </Text>
-                          ) : null}
-                        </View>
-                        <Text
-                          className={`text-lg font-bold ${
-                            isIncome ? 'text-income-600' : 'text-expense-600'
-                          }`}>
-                          {isIncome ? '+' : '-'}
-                          {formatCurrency(transaction.amount, currency)}
-                        </Text>
-                      </View>
-                    </Pressable>
-                    <Pressable className="mt-3 self-end" onPress={() => handleDelete(transaction)}>
-                      <Text className="text-sm font-medium text-expense-500">Delete</Text>
-                    </Pressable>
-                  </Card>
-                );
-              })}
+          <ScrollView
+            className="mt-6"
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#133458" />
+            }>
+            <View className="gap-6 pb-24">
+              {groupedTransactions.map((group) => (
+                <View key={group.date}>
+                  <DateGroupHeader label={group.label} count={group.items.length} />
+                  <View className="gap-3">
+                    {group.items.map((transaction) => (
+                      <TransactionRow
+                        key={transaction.$id}
+                        categoryName={transaction.categoryName}
+                        accountName={getAccountName(transaction.bankAccountId)}
+                        partitionName={
+                          partitionMap[transaction.partitionId] || 'Partition'
+                        }
+                        amount={transaction.amount}
+                        currency={getAccountCurrency(transaction.bankAccountId)}
+                        type={transaction.type}
+                        note={transaction.note}
+                        onPress={() => openEditModal(transaction)}
+                        onDelete={() => handleDelete(transaction)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
             </View>
           </ScrollView>
         )}
       </View>
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/50">
-          <ScrollView className="max-h-[90%] rounded-t-3xl bg-white dark:bg-gray-900">
-            <View className="p-6">
-              <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingTransaction ? 'Edit transaction' : 'New transaction'}
+      <Fab onPress={openCreateModal} label="Add" accessibilityLabel="Add transaction" />
+
+      <ModalSheet
+        visible={modalVisible}
+        onClose={closeModal}
+        title={editingTransaction ? 'Edit transaction' : 'New transaction'}>
+        <View className="gap-4">
+          <View className="flex-row gap-2">
+            <Pressable
+              className={`flex-1 rounded-xl border-2 py-3.5 ${
+                type === 'income'
+                  ? 'border-income-600 bg-income-600'
+                  : 'border-border bg-surface-bg dark:border-border-dark dark:bg-surface-dark'
+              }`}
+              onPress={() => handleTypeChange('income')}
+              disabled={mutationLoading}
+              accessibilityRole="button"
+              accessibilityLabel="Income">
+              <Text
+                className={`text-center font-bold ${
+                  type === 'income' ? 'text-white' : 'text-content-secondary dark:text-gray-300'
+                }`}>
+                ↑ Income
               </Text>
+            </Pressable>
+            <Pressable
+              className={`flex-1 rounded-xl border-2 py-3.5 ${
+                type === 'expense'
+                  ? 'border-expense-600 bg-expense-600'
+                  : 'border-border bg-surface-bg dark:border-border-dark dark:bg-surface-dark'
+              }`}
+              onPress={() => handleTypeChange('expense')}
+              disabled={mutationLoading}
+              accessibilityRole="button"
+              accessibilityLabel="Expense">
+              <Text
+                className={`text-center font-bold ${
+                  type === 'expense' ? 'text-white' : 'text-content-secondary dark:text-gray-300'
+                }`}>
+                ↓ Expense
+              </Text>
+            </Pressable>
+          </View>
 
-              <View className="mt-6 gap-4">
-                <View className="flex-row gap-2">
-                  <Pressable
-                    className={`flex-1 rounded-xl py-3 ${
-                      type === 'income' ? 'bg-income-600' : 'bg-gray-200 dark:bg-gray-800'
-                    }`}
-                    onPress={() => handleTypeChange('income')}
-                    disabled={mutationLoading}>
-                    <Text
-                      className={`text-center font-semibold ${
-                        type === 'income' ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                      }`}>
-                      Income
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    className={`flex-1 rounded-xl py-3 ${
-                      type === 'expense' ? 'bg-expense-600' : 'bg-gray-200 dark:bg-gray-800'
-                    }`}
-                    onPress={() => handleTypeChange('expense')}
-                    disabled={mutationLoading}>
-                    <Text
-                      className={`text-center font-semibold ${
-                        type === 'expense' ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                      }`}>
-                      Expense
-                    </Text>
-                  </Pressable>
-                </View>
+          <ChipPicker
+            label="Category"
+            options={categoriesForType}
+            value={categoryId}
+            onChange={(id, catName) => {
+              setCategoryId(id);
+              setCategoryName(catName);
+            }}
+            disabled={mutationLoading}
+          />
 
-                <ChipPicker
-                  label="Category"
-                  options={categoriesForType}
-                  value={categoryId}
-                  onChange={(id, catName) => {
-                    setCategoryId(id);
-                    setCategoryName(catName);
-                  }}
-                  disabled={mutationLoading}
-                />
+          <ChipPicker
+            label="Bank account"
+            options={accountOptions}
+            value={bankAccountId}
+            onChange={(id) => {
+              setBankAccountId(id);
+              setPartitionId('');
+            }}
+            disabled={mutationLoading}
+          />
 
-                <ChipPicker
-                  label="Bank account"
-                  options={accountOptions}
-                  value={bankAccountId}
-                  onChange={(id) => {
-                    setBankAccountId(id);
-                    setPartitionId('');
-                  }}
-                  disabled={mutationLoading}
-                />
+          <ChipPicker
+            label="Partition (required)"
+            options={partitionOptions}
+            value={partitionId}
+            onChange={(id) => setPartitionId(id)}
+            disabled={mutationLoading || !bankAccountId}
+          />
 
-                <ChipPicker
-                  label="Partition (required)"
-                  options={partitionOptions}
-                  value={partitionId}
-                  onChange={(id) => setPartitionId(id)}
-                  disabled={mutationLoading || !bankAccountId}
-                />
+          <FormField
+            label="Amount"
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            value={amount}
+            onChangeText={setAmount}
+            editable={!mutationLoading}
+          />
 
-                <View>
-                  <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Amount
-                  </Text>
-                  <TextInput
-                    className="rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    placeholder="0.00"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="decimal-pad"
-                    value={amount}
-                    onChangeText={setAmount}
-                    editable={!mutationLoading}
-                  />
-                </View>
+          <DatePickerField
+            label="Date"
+            value={date}
+            onChange={setDate}
+            disabled={mutationLoading}
+          />
 
-                <View>
-                  <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Date
-                  </Text>
-                  <TextInput
-                    className="rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9ca3af"
-                    value={date}
-                    onChangeText={setDate}
-                    editable={!mutationLoading}
-                  />
-                </View>
+          <FormField
+            label="Note (optional)"
+            placeholder="Add a note"
+            value={note}
+            onChangeText={setNote}
+            editable={!mutationLoading}
+          />
 
-                <View>
-                  <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Note (optional)
-                  </Text>
-                  <TextInput
-                    className="rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    placeholder="Add a note"
-                    placeholderTextColor="#9ca3af"
-                    value={note}
-                    onChangeText={setNote}
-                    editable={!mutationLoading}
-                  />
-                </View>
+          {mutationError ? (
+            <Text className="text-sm font-medium text-expense-600 dark:text-expense-500">
+              {mutationError?.data || mutationError?.error || 'Something went wrong'}
+            </Text>
+          ) : null}
 
-                {mutationError ? (
-                  <Text className="text-sm text-red-500">
-                    {mutationError?.data || mutationError?.error || 'Something went wrong'}
-                  </Text>
-                ) : null}
-
-                <View className="flex-row gap-3">
-                  <SecondaryButton
-                    label="Cancel"
-                    onPress={closeModal}
-                    disabled={mutationLoading}
-                    className="flex-1"
-                  />
-                  <PrimaryButton
-                    label="Save"
-                    onPress={handleSave}
-                    loading={mutationLoading}
-                    disabled={
-                      !categoryId ||
-                      !bankAccountId ||
-                      !partitionId ||
-                      !amount ||
-                      !date
-                    }
-                    className="flex-1"
-                  />
-                </View>
-              </View>
-            </View>
-          </ScrollView>
+          <View className="flex-row gap-3">
+            <SecondaryButton
+              label="Cancel"
+              onPress={closeModal}
+              disabled={mutationLoading}
+              className="flex-1"
+            />
+            <PrimaryButton
+              label="Save"
+              onPress={handleSave}
+              loading={mutationLoading}
+              disabled={
+                !categoryId ||
+                !bankAccountId ||
+                !partitionId ||
+                !amount ||
+                !date
+              }
+              className="flex-1"
+            />
+          </View>
         </View>
-      </Modal>
+      </ModalSheet>
     </ScreenContainer>
   );
 }

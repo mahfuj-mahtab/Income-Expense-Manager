@@ -7,9 +7,17 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'chevron.left': 'chevron-left',
   'creditcard.fill': 'credit-card',
   'list.bullet': 'list',
   'gearshape.fill': 'settings',
+  plus: 'add',
+  pencil: 'edit',
+  trash: 'delete',
+  eye: 'visibility',
+  'eye.slash': 'visibility-off',
+  'arrow.up': 'north',
+  'arrow.down': 'south',
 };
 
 /**

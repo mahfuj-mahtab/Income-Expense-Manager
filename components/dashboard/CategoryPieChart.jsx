@@ -3,18 +3,19 @@ import { PieChart } from 'react-native-gifted-charts';
 
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { formatCurrency } from '@/lib/accounts/formatCurrency';
 
 export function CategoryPieChart({ title, data, currency, emptyMessage }) {
   const colorScheme = useColorScheme();
-  const innerColor = colorScheme === 'dark' ? '#111827' : '#ffffff';
+  const innerColor = colorScheme === 'dark' ? '#1E293B' : '#FFFFFF';
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   if (data.length === 0 || total === 0) {
     return (
       <Card className="mt-4">
-        <Text className="text-base font-semibold text-gray-900 dark:text-white">{title}</Text>
+        <SectionHeader title={title} />
         <EmptyState title={emptyMessage} />
       </Card>
     );
@@ -28,8 +29,8 @@ export function CategoryPieChart({ title, data, currency, emptyMessage }) {
 
   return (
     <Card className="mt-4">
-      <Text className="text-base font-semibold text-gray-900 dark:text-white">{title}</Text>
-      <View className="mt-4 items-center">
+      <SectionHeader title={title} />
+      <View className="mt-2 items-center">
         <PieChart
           data={pieData}
           donut
@@ -38,8 +39,8 @@ export function CategoryPieChart({ title, data, currency, emptyMessage }) {
           innerCircleColor={innerColor}
           centerLabelComponent={() => (
             <View className="items-center">
-              <Text className="text-xs text-gray-500 dark:text-gray-400">Total</Text>
-              <Text className="text-sm font-bold text-gray-900 dark:text-white">
+              <Text className="text-xs text-content-secondary dark:text-gray-400">Total</Text>
+              <Text className="text-sm font-bold text-content dark:text-white">
                 {formatCurrency(total, currency)}
               </Text>
             </View>
@@ -56,9 +57,11 @@ export function CategoryPieChart({ title, data, currency, emptyMessage }) {
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <Text className="text-sm text-gray-700 dark:text-gray-300">{item.label}</Text>
+                <Text className="text-sm text-content-secondary dark:text-gray-300">
+                  {item.label}
+                </Text>
               </View>
-              <Text className="text-sm font-medium text-gray-900 dark:text-white">
+              <Text className="text-sm font-medium text-content dark:text-white">
                 {formatCurrency(item.value, currency)} ({percentage}%)
               </Text>
             </View>

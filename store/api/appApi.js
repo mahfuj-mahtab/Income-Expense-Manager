@@ -114,6 +114,7 @@ export const appApi = createApi({
   reducerPath: 'appApi',
   baseQuery: fakeBaseQuery(),
   tagTypes: ['BankAccount', 'Partition', 'Category', 'Transaction'],
+  refetchOnMountOrArgChange: true,
   endpoints: (builder) => ({
     getBankAccounts: builder.query({
       async queryFn() {

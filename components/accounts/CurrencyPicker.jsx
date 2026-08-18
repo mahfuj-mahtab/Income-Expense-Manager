@@ -9,16 +9,21 @@ export function CurrencyPicker({ value, onChange, disabled = false }) {
         return (
           <Pressable
             key={currency.code}
-            className={`rounded-lg border px-3 py-2 ${
+            className={`rounded-full border px-3 py-2 ${
               selected
-                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30'
-                : 'border-gray-300 dark:border-gray-600'
-            } ${disabled ? 'opacity-50' : ''}`}
+                ? 'border-primary bg-primary-50 dark:bg-primary-600/20'
+                : 'border-border bg-surface dark:border-border-dark dark:bg-surface-card'
+            } ${disabled ? 'opacity-50' : 'active:opacity-80'}`}
             onPress={() => onChange(currency.code)}
-            disabled={disabled}>
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel={currency.code}
+            accessibilityState={{ selected }}>
             <Text
               className={`text-sm font-medium ${
-                selected ? 'text-blue-600' : 'text-gray-700 dark:text-gray-300'
+                selected
+                  ? 'text-primary dark:text-primary-50'
+                  : 'text-content-secondary dark:text-gray-300'
               }`}>
               {currency.symbol} {currency.code}
             </Text>

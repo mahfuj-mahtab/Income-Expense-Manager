@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
-import { AnalyticsSummary } from '@/components/dashboard/AnalyticsSummary';
+import {
+  AnalyticsSummary,
+  HeroBalanceCard,
+} from '@/components/dashboard/AnalyticsSummary';
 import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
 import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { MonthPicker } from '@/components/dashboard/MonthPicker';
 import { PartitionPieChart } from '@/components/dashboard/PartitionPieChart';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { StatCardSkeleton } from '@/components/ui/Skeleton';
 import { getCurrentMonth, formatMonthLabel } from '@/lib/analytics/dateRange';
 import { buildPartitionChartData } from '@/lib/analytics/partitions';
 import {
@@ -18,6 +22,7 @@ import {
   sumByCategory,
   sumByType,
 } from '@/lib/analytics/transactions';
+import { getGreeting } from '@/lib/ui/greeting';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   appApi,
@@ -28,14 +33,16 @@ import {
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { data: transactions = [], isLoading: transactionsLoading } =
+  const { data: transactions = [], isLoading: transactionsLoading, refetch: refetchTransactions } =
     useGetTransactionsQuery();
-  const { data: accounts = [], isLoading: accountsLoading } = useGetBankAccountsQuery();
+  const { data: accounts = [], isLoading: accountsLoading, refetch: refetchAccounts } =
+    useGetBankAccountsQuery();
 
   const [monthState, setMonthState] = useState(getCurrentMonth);
   const [selectedCurrency, setSelectedCurrency] = useState('');
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [partitionsByAccount, setPartitionsByAccount] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
 
   const currencies = useMemo(() => getUniqueCurrencies(accounts), [accounts]);
 
@@ -134,13 +141,26 @@ export default function HomeScreen() {
   const isLoading = transactionsLoading || accountsLoading;
   const monthLabel = formatMonthLabel(monthState.year, monthState.month);
   const hasMonthData = currencyTransactions.length > 0;
+  const displayName = user?.name || user?.email?.split('@')[0] || 'there';
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchTransactions(), refetchAccounts()]);
+    setRefreshing(false);
+  };
 
   return (
     <ScreenContainer>
-      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 px-6 pt-6"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#133458" />
+        }>
         <ScreenHeader
-          title="Dashboard"
-          subtitle={`Welcome back, ${user?.name || user?.email || 'there'}`}
+          greeting={getGreeting()}
+          title={displayName}
+          subtitle="Here's your financial overview"
         />
 
         <MonthPicker
@@ -156,22 +176,29 @@ export default function HomeScreen() {
         />
 
         {isLoading ? (
-          <View className="mt-12 items-center">
-            <ActivityIndicator size="large" color="#2563eb" />
+          <View className="mt-4 gap-3">
+            <View className="h-24 rounded-2xl bg-primary-50 dark:bg-primary-600/15" />
+            <View className="flex-row gap-3">
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </View>
           </View>
         ) : (
           <>
             {selectedCurrency ? (
-              <AnalyticsSummary
-                totals={totals}
-                balance={balance}
-                currency={selectedCurrency}
-              />
+              <>
+                <HeroBalanceCard balance={balance} currency={selectedCurrency} />
+                <AnalyticsSummary
+                  totals={totals}
+                  balance={balance}
+                  currency={selectedCurrency}
+                />
+              </>
             ) : null}
 
             {!hasMonthData ? (
-              <View className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-                <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
+              <View className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-6 dark:border-border-dark dark:bg-surface-card">
+                <Text className="text-center text-sm text-content-secondary dark:text-gray-400">
                   No transactions in {monthLabel}
                   {selectedCurrency ? ` for ${selectedCurrency}` : ''}
                 </Text>

@@ -1,30 +1,44 @@
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
-  Modal,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { FormField } from '@/components/ui/FormField';
+import { IconButton } from '@/components/ui/IconButton';
+import { ModalSheet } from '@/components/ui/ModalSheet';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ListItemSkeleton } from '@/components/ui/Skeleton';
 import { getPresetCategoriesByType } from '@/constants/presetCategories';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
+import {
+  applyThemePreference,
+  persistThemePreference,
+  setThemePreference,
+} from '@/store/slices/themeSlice';
 import {
   useCreateCategoryMutation,
   useDeleteCategoryMutation,
   useGetCustomCategoriesQuery,
   useUpdateCategoryMutation,
 } from '@/store/api/appApi';
+
+const THEME_OPTIONS = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
 
 function CategorySection({
   title,
@@ -38,7 +52,7 @@ function CategorySection({
   return (
     <Card className="mt-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-semibold text-gray-900 dark:text-white">{title}</Text>
+        <Text className="text-lg font-semibold text-content dark:text-white">{title}</Text>
         <PrimaryButton
           label="+ Custom"
           onPress={() => onAdd(type)}
@@ -46,41 +60,40 @@ function CategorySection({
         />
       </View>
 
-      <Text className="mt-4 text-xs font-medium uppercase tracking-wide text-gray-400">
-        Presets
-      </Text>
-      <View className="mt-2 flex-row flex-wrap gap-2">
+      <SectionHeader title="Presets" className="mt-4" />
+      <View className="flex-row flex-wrap gap-2">
         {presets.map((cat) => (
           <View
             key={cat.id}
-            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-            <Text className="text-sm text-gray-700 dark:text-gray-300">{cat.name}</Text>
+            className="rounded-full border border-border bg-surface-bg px-3 py-2 dark:border-border-dark dark:bg-surface-dark">
+            <Text className="text-sm text-content-secondary dark:text-gray-300">{cat.name}</Text>
           </View>
         ))}
       </View>
 
       {customs.length > 0 ? (
         <>
-          <Text className="mt-4 text-xs font-medium uppercase tracking-wide text-gray-400">
-            Custom
-          </Text>
-          <View className="mt-2 gap-2">
+          <SectionHeader title="Custom" className="mt-4" />
+          <View className="gap-2">
             {customs.map((cat) => (
               <View
                 key={cat.$id}
-                className="flex-row items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
-                <Text className="text-base text-gray-900 dark:text-white">{cat.name}</Text>
+                className="flex-row items-center justify-between rounded-xl border border-border bg-surface-bg p-3 dark:border-border-dark dark:bg-surface-dark">
+                <Text className="text-base text-content dark:text-white">{cat.name}</Text>
                 <View className="flex-row gap-2">
-                  <Pressable
-                    className="rounded-lg bg-gray-200 px-3 py-1 dark:bg-gray-700"
-                    onPress={() => onEdit(cat)}>
-                    <Text className="text-sm text-gray-700 dark:text-gray-300">Edit</Text>
-                  </Pressable>
-                  <Pressable
-                    className="rounded-lg bg-expense-50 px-3 py-1 dark:bg-expense-500/10"
-                    onPress={() => onDelete(cat)}>
-                    <Text className="text-sm text-expense-600">Delete</Text>
-                  </Pressable>
+                  <IconButton
+                    icon="pencil"
+                    onPress={() => onEdit(cat)}
+                    accessibilityLabel="Edit category"
+                    size={36}
+                  />
+                  <IconButton
+                    icon="trash"
+                    onPress={() => onDelete(cat)}
+                    accessibilityLabel="Delete category"
+                    size={36}
+                    color="#DC2626"
+                  />
                 </View>
               </View>
             ))}
@@ -94,6 +107,7 @@ function CategorySection({
 export default function SettingsScreen() {
   const dispatch = useAppDispatch();
   const { user, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const { preference: themePreference } = useAppSelector((state) => state.theme);
   const { data: customCategories = [], isLoading, error } = useGetCustomCategoriesQuery();
   const [createCategory, { isLoading: isCreating, error: createError }] =
     useCreateCategoryMutation();
@@ -108,6 +122,8 @@ export default function SettingsScreen() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryType, setCategoryType] = useState('expense');
   const [name, setName] = useState('');
+
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   const incomePresets = getPresetCategoriesByType('income');
   const expensePresets = getPresetCategoriesByType('expense');
@@ -171,6 +187,12 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const handleThemeChange = async (preference) => {
+    dispatch(setThemePreference(preference));
+    applyThemePreference(preference);
+    await persistThemePreference(preference);
+  };
+
   const handleLogout = async () => {
     const result = await dispatch(logout());
     if (logout.fulfilled.match(result)) {
@@ -181,34 +203,53 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
-        <ScreenHeader
-          title="Settings"
-          subtitle="Manage categories and your account"
-        />
+        <ScreenHeader title="Settings" subtitle="Manage your preferences" />
 
         <Card className="mt-6">
-          <Text className="text-lg font-semibold text-gray-900 dark:text-white">Account</Text>
-          <Text className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Signed in as {user?.name || user?.email}
-          </Text>
-          <PrimaryButton
-            label="Log out"
-            onPress={handleLogout}
-            loading={authLoading}
-            variant="danger"
-            className="mt-4"
-          />
+          <View className="flex-row items-center gap-4">
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-600/20">
+              <Text className="text-xl font-bold text-primary dark:text-primary-50">
+                {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-semibold text-content dark:text-white">
+                {user?.name || 'User'}
+              </Text>
+              <Text className="text-sm text-content-secondary dark:text-gray-400">
+                {user?.email}
+              </Text>
+              <Text className="mt-1 text-xs text-content-secondary dark:text-gray-500">
+                Version {appVersion}
+              </Text>
+            </View>
+          </View>
+        </Card>
+
+        <Card className="mt-4">
+          <SectionHeader title="Appearance" />
+          <View className="flex-row flex-wrap gap-2">
+            {THEME_OPTIONS.map((option) => (
+              <Chip
+                key={option.id}
+                label={option.label}
+                selected={themePreference === option.id}
+                onPress={() => handleThemeChange(option.id)}
+              />
+            ))}
+          </View>
         </Card>
 
         {error ? (
-          <Text className="mt-4 text-sm text-red-500">
+          <Text className="mt-4 text-sm text-expense-500">
             {error?.data || error?.error || 'Failed to load categories'}
           </Text>
         ) : null}
 
         {isLoading ? (
-          <View className="mt-12 items-center">
-            <ActivityIndicator size="large" color="#2563eb" />
+          <View className="mt-6 gap-3">
+            <ListItemSkeleton />
+            <ListItemSkeleton />
           </View>
         ) : (
           <>
@@ -233,57 +274,54 @@ export default function SettingsScreen() {
           </>
         )}
 
+        <SecondaryButton
+          label="Log out"
+          onPress={handleLogout}
+          disabled={authLoading}
+          variant="danger"
+          className="mt-6"
+        />
+
         <View className="h-8" />
       </ScrollView>
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="rounded-t-3xl bg-white p-6 dark:bg-gray-900">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">
-              {editingCategory ? 'Edit category' : 'New category'}
+      <ModalSheet
+        visible={modalVisible}
+        onClose={closeModal}
+        title={editingCategory ? 'Edit category' : 'New category'}>
+        <Text className="mb-4 text-sm capitalize text-content-secondary">{categoryType}</Text>
+        <View className="gap-4">
+          <FormField
+            label="Name"
+            placeholder="Category name"
+            value={name}
+            onChangeText={setName}
+            editable={!mutationLoading}
+          />
+
+          {mutationError ? (
+            <Text className="text-sm text-expense-500">
+              {mutationError?.data || mutationError?.error || 'Something went wrong'}
             </Text>
-            <Text className="mt-1 text-sm capitalize text-gray-500">{categoryType}</Text>
+          ) : null}
 
-            <View className="mt-6 gap-4">
-              <View>
-                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Name
-                </Text>
-                <TextInput
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                  placeholder="Category name"
-                  placeholderTextColor="#9ca3af"
-                  value={name}
-                  onChangeText={setName}
-                  editable={!mutationLoading}
-                />
-              </View>
-
-              {mutationError ? (
-                <Text className="text-sm text-red-500">
-                  {mutationError?.data || mutationError?.error || 'Something went wrong'}
-                </Text>
-              ) : null}
-
-              <View className="flex-row gap-3">
-                <SecondaryButton
-                  label="Cancel"
-                  onPress={closeModal}
-                  disabled={mutationLoading}
-                  className="flex-1"
-                />
-                <PrimaryButton
-                  label="Save"
-                  onPress={handleSave}
-                  loading={mutationLoading}
-                  disabled={!name.trim()}
-                  className="flex-1"
-                />
-              </View>
-            </View>
+          <View className="flex-row gap-3">
+            <SecondaryButton
+              label="Cancel"
+              onPress={closeModal}
+              disabled={mutationLoading}
+              className="flex-1"
+            />
+            <PrimaryButton
+              label="Save"
+              onPress={handleSave}
+              loading={mutationLoading}
+              disabled={!name.trim()}
+              className="flex-1"
+            />
           </View>
         </View>
-      </Modal>
+      </ModalSheet>
     </ScreenContainer>
   );
 }

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
@@ -12,23 +13,25 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: isDark ? '#9ca3af' : '#6b7280',
+        tabBarActiveTintColor: isDark ? palette.primaryLight : palette.primary,
+        tabBarInactiveTintColor: isDark ? palette.darkTextSecondary : palette.textSecondary,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: isDark ? '#030712' : '#ffffff',
-          borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
+          backgroundColor: isDark ? palette.darkCard : palette.card,
+          borderTopColor: isDark ? palette.darkBorder : palette.border,
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 88 : 64,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
           ...Platform.select({
             ios: {
-              shadowColor: '#000',
+              shadowColor: palette.primary,
               shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
             },
             android: {
               elevation: 8,

@@ -22,6 +22,11 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async () => {
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }) => {
+    try {
+      await account.deleteSession({ sessionId: 'current' });
+    } catch {
+      // No active session — safe to continue.
+    }
     await account.createEmailPasswordSession({ email, password });
     const user = await account.get();
     return user;
@@ -31,6 +36,11 @@ export const login = createAsyncThunk(
 export const register = createAsyncThunk(
   'auth/register',
   async ({ name, email, password }) => {
+    try {
+      await account.deleteSession({ sessionId: 'current' });
+    } catch {
+      // No active session — safe to continue.
+    }
     await account.create({
       userId: ID.unique(),
       email,
