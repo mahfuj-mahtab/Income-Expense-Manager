@@ -2,10 +2,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    ScrollView,
+    Text,
+    View,
 } from 'react-native';
 
 import { Badge } from '@/components/ui/Badge';
@@ -20,15 +20,15 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { ListItemSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/lib/accounts/formatCurrency';
 import {
-  getPartitionsTotal,
-  getUnallocated,
+    getPartitionsTotal,
+    getUnallocated,
 } from '@/lib/accounts/validation';
 import {
-  useCreatePartitionMutation,
-  useDeletePartitionMutation,
-  useGetBankAccountsQuery,
-  useGetPartitionsQuery,
-  useUpdatePartitionMutation,
+    useCreatePartitionMutation,
+    useDeletePartitionMutation,
+    useGetBankAccountsQuery,
+    useGetPartitionsQuery,
+    useUpdatePartitionMutation,
 } from '@/store/api/appApi';
 
 function AllocationBar({ allocated, total, currency }) {

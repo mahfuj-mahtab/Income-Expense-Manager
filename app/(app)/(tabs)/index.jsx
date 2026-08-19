@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import {
-  AnalyticsSummary,
-  HeroBalanceCard,
+    AnalyticsSummary,
+    HeroBalanceCard,
 } from '@/components/dashboard/AnalyticsSummary';
 import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
 import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
@@ -12,23 +12,23 @@ import { PartitionPieChart } from '@/components/dashboard/PartitionPieChart';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { StatCardSkeleton } from '@/components/ui/Skeleton';
-import { getCurrentMonth, formatMonthLabel } from '@/lib/analytics/dateRange';
+import { formatMonthLabel, getCurrentMonth } from '@/lib/analytics/dateRange';
 import { buildPartitionChartData } from '@/lib/analytics/partitions';
 import {
-  filterTransactionsByCurrency,
-  filterTransactionsByMonth,
-  getAccountBalanceForCurrency,
-  getUniqueCurrencies,
-  sumByCategory,
-  sumByType,
+    filterTransactionsByCurrency,
+    filterTransactionsByMonth,
+    getAccountBalanceForCurrency,
+    getUniqueCurrencies,
+    sumByCategory,
+    sumByType,
 } from '@/lib/analytics/transactions';
 import { getGreeting } from '@/lib/ui/greeting';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  appApi,
-  useGetBankAccountsQuery,
-  useGetTransactionsQuery,
+    appApi,
+    useGetBankAccountsQuery,
+    useGetTransactionsQuery,
 } from '@/store/api/appApi';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();

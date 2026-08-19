@@ -1,18 +1,18 @@
+import { canAllocate, getPartitionsTotal } from '@/lib/accounts/validation';
+import {
+    account,
+    APPWRITE_DATABASE_ID,
+    BANK_ACCOUNTS_TABLE_ID,
+    CATEGORIES_TABLE_ID,
+    PARTITIONS_TABLE_ID,
+    tablesDB,
+    TRANSACTIONS_TABLE_ID,
+} from '@/lib/appwrite/client';
+import {
+    validateExpense,
+} from '@/lib/transactions/balance';
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ID, Permission, Query, Role } from 'react-native-appwrite';
-import {
-  account,
-  APPWRITE_DATABASE_ID,
-  BANK_ACCOUNTS_TABLE_ID,
-  CATEGORIES_TABLE_ID,
-  PARTITIONS_TABLE_ID,
-  TRANSACTIONS_TABLE_ID,
-  tablesDB,
-} from '@/lib/appwrite/client';
-import { getPartitionsTotal, canAllocate } from '@/lib/accounts/validation';
-import {
-  validateExpense,
-} from '@/lib/transactions/balance';
 
 function getErrorMessage(error) {
   if (typeof error === 'string') return error;

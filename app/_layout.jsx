@@ -1,24 +1,24 @@
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    useFonts,
 } from '@expo-google-fonts/inter';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Provider } from 'react-redux';
 import 'react-native-reanimated';
+import { Provider } from 'react-redux';
 import '../global.css';
 
-import { NavigationTheme } from '@/constants/theme';
 import { ThemeBootstrap } from '@/components/ThemeBootstrap';
+import { NavigationTheme } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAppDispatch } from '@/store/hooks';
 import { store } from '@/store';
+import { useAppDispatch } from '@/store/hooks';
 import { initializeAuth } from '@/store/slices/authSlice';
 
 SplashScreen.preventAutoHideAsync();
