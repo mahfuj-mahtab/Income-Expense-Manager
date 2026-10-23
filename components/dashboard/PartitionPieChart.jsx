@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { formatCurrency } from '@/lib/accounts/formatCurrency';
 
@@ -16,7 +17,7 @@ export function PartitionPieChart({
   currency,
 }) {
   const colorScheme = useColorScheme();
-  const innerColor = colorScheme === 'dark' ? '#1E293B' : '#FFFFFF';
+  const innerColor = colorScheme === 'dark' ? palette.darkCard : palette.card;
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
@@ -76,21 +77,25 @@ export function PartitionPieChart({
                   )}
                 />
               </View>
-              <View className="mt-4 gap-2">
+              <View className="mt-5 gap-3">
                 {data.map((item) => {
                   const percentage = ((item.value / total) * 100).toFixed(1);
                   return (
                     <View key={item.label} className="flex-row items-center justify-between">
-                      <View className="flex-row items-center gap-2">
+                      <View className="min-w-0 flex-1 flex-row items-center gap-2.5 pr-3">
                         <View
-                          className="h-3 w-3 rounded-full"
+                          className="h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: item.color }}
                         />
-                        <Text className="text-sm text-content-secondary dark:text-gray-300">
+                        <Text
+                          className="text-sm text-content-secondary dark:text-gray-300"
+                          numberOfLines={1}>
                           {item.label}
                         </Text>
                       </View>
-                      <Text className="text-sm font-medium text-content dark:text-white">
+                      <Text
+                        className="text-sm font-semibold text-content dark:text-white"
+                        style={{ fontVariant: ['tabular-nums'] }}>
                         {formatCurrency(item.value, currency)} ({percentage}%)
                       </Text>
                     </View>

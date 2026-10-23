@@ -1,10 +1,28 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+function TabIcon({ name, color, focused, isDark }) {
+  return (
+    <View
+      style={{
+        backgroundColor: focused
+          ? isDark
+            ? 'rgba(232, 240, 248, 0.12)'
+            : palette.primaryLight
+          : 'transparent',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 4,
+      }}>
+      <IconSymbol size={22} name={name} color={color} />
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -21,41 +39,44 @@ export default function TabLayout() {
           backgroundColor: isDark ? palette.darkCard : palette.card,
           borderTopColor: isDark ? palette.darkBorder : palette.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          height: Platform.OS === 'ios' ? 80 : 60,
+          paddingTop: 6,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 6,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
           ...Platform.select({
             ios: {
-              shadowColor: palette.primary,
-              shadowOffset: { width: 0, height: -2 },
+              shadowColor: palette.primaryDeep,
+              shadowOffset: { width: 0, height: -4 },
               shadowOpacity: 0.08,
-              shadowRadius: 12,
+              shadowRadius: 16,
             },
             android: {
-              elevation: 8,
+              elevation: 10,
             },
           }),
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          marginTop: -2,
         },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="house.fill" color={color} focused={focused} isDark={isDark} />
+          ),
         }}
       />
       <Tabs.Screen
         name="accounts"
         options={{
           title: 'Accounts',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="creditcard.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="creditcard.fill" color={color} focused={focused} isDark={isDark} />
           ),
         }}
       />
@@ -63,15 +84,26 @@ export default function TabLayout() {
         name="transactions"
         options={{
           title: 'Transactions',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="list.bullet" color={color} focused={focused} isDark={isDark} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="debts"
+        options={{
+          title: 'Debts',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="banknote.fill" color={color} focused={focused} isDark={isDark} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="gearshape.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="gearshape.fill" color={color} focused={focused} isDark={isDark} />
           ),
         }}
       />

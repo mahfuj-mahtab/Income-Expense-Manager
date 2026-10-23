@@ -10,6 +10,7 @@ import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { MonthPicker } from '@/components/dashboard/MonthPicker';
 import { PartitionPieChart } from '@/components/dashboard/PartitionPieChart';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenEnter } from '@/components/ui/ScreenEnter';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { StatCardSkeleton } from '@/components/ui/Skeleton';
 import { formatMonthLabel, getCurrentMonth } from '@/lib/analytics/dateRange';
@@ -157,6 +158,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#133458" />
         }>
+        <ScreenEnter>
         <ScreenHeader
           greeting={getGreeting()}
           title={displayName}
@@ -177,8 +179,9 @@ export default function HomeScreen() {
 
         {isLoading ? (
           <View className="mt-4 gap-3">
-            <View className="h-24 rounded-2xl bg-primary-50 dark:bg-primary-600/15" />
-            <View className="flex-row gap-3">
+            <View className="mt-5 h-36 rounded-sheet bg-primary-50 dark:bg-primary-600/15" />
+            <View className="mt-3 flex-row gap-2">
+              <StatCardSkeleton />
               <StatCardSkeleton />
               <StatCardSkeleton />
             </View>
@@ -188,16 +191,12 @@ export default function HomeScreen() {
             {selectedCurrency ? (
               <>
                 <HeroBalanceCard balance={balance} currency={selectedCurrency} />
-                <AnalyticsSummary
-                  totals={totals}
-                  balance={balance}
-                  currency={selectedCurrency}
-                />
+                <AnalyticsSummary totals={totals} currency={selectedCurrency} />
               </>
             ) : null}
 
             {!hasMonthData ? (
-              <View className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-6 dark:border-border-dark dark:bg-surface-card">
+              <View className="mt-6 rounded-card border border-dashed border-border bg-surface p-6 dark:border-border-dark dark:bg-surface-card">
                 <Text className="text-center text-sm text-content-secondary dark:text-gray-400">
                   No transactions in {monthLabel}
                   {selectedCurrency ? ` for ${selectedCurrency}` : ''}
@@ -230,6 +229,7 @@ export default function HomeScreen() {
             <View className="h-8" />
           </>
         )}
+        </ScreenEnter>
       </ScrollView>
     </ScreenContainer>
   );

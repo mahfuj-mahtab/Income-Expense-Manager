@@ -1,11 +1,11 @@
 import { Text, View } from 'react-native';
 
 const accentStyles = {
-  brand: 'bg-primary-50 dark:bg-primary-600/15',
-  income: 'bg-income-50 dark:bg-income-500/10',
-  expense: 'bg-expense-50 dark:bg-expense-500/10',
-  warning: 'bg-warning-50 dark:bg-warning-500/10',
-  neutral: 'bg-surface-bg dark:bg-surface-dark',
+  brand: 'bg-primary',
+  income: 'bg-income-500',
+  expense: 'bg-expense-500',
+  warning: 'bg-warning-500',
+  neutral: 'bg-primary-100',
 };
 
 const valueStyles = {
@@ -18,11 +18,18 @@ const valueStyles = {
 
 export function StatCard({ label, value, accent = 'neutral', className = '' }) {
   return (
-    <View className={`min-w-[100px] flex-1 rounded-2xl p-4 ${accentStyles[accent]} ${className}`}>
-      <Text className="text-xs font-medium uppercase tracking-wide text-content-secondary dark:text-gray-400">
+    <View
+      className={`min-w-0 flex-1 rounded-card border border-border/80 bg-surface p-3 shadow-card dark:border-border-dark dark:bg-surface-card ${className}`}>
+      <View className={`h-1 w-7 rounded-full ${accentStyles[accent]}`} />
+      <Text className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-content-secondary dark:text-gray-400">
         {label}
       </Text>
-      <Text className={`mt-1.5 text-xl font-bold ${valueStyles[accent]}`}>{value}</Text>
+      <Text
+        className={`mt-1 text-sm font-bold ${valueStyles[accent]}`}
+        numberOfLines={2}
+        style={{ fontVariant: ['tabular-nums'] }}>
+        {value}
+      </Text>
     </View>
   );
 }

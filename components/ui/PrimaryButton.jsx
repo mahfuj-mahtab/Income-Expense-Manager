@@ -19,7 +19,7 @@ export function PrimaryButton({
 
   return (
     <Pressable
-      className={`items-center rounded-xl px-4 py-3.5 ${variants[variant]} disabled:opacity-60 ${className}`}
+      className={`items-center rounded-2xl px-4 py-4 ${variants[variant]} disabled:opacity-60 ${className}`}
       onPress={() => {
         if (haptic && !disabled && !loading) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

@@ -18,11 +18,13 @@ import { FormField } from '@/components/ui/FormField';
 import { ModalSheet } from '@/components/ui/ModalSheet';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenEnter } from '@/components/ui/ScreenEnter';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import { ListItemSkeleton } from '@/components/ui/Skeleton';
 import { getPresetCategoriesByType } from '@/constants/presetCategories';
 import { groupByDate } from '@/lib/ui/groupByDate';
+import { normalizeDateKey, todayLocalDate } from '@/lib/ui/localDate';
 import { useAppDispatch } from '@/store/hooks';
 import {
   appApi,
@@ -33,10 +35,6 @@ import {
   useGetTransactionsQuery,
   useUpdateTransactionMutation,
 } from '@/store/api/appApi';
-
-function todayISO() {
-  return new Date().toISOString().split('T')[0];
-}
 
 export default function TransactionsScreen() {
   const dispatch = useAppDispatch();
@@ -64,7 +62,7 @@ export default function TransactionsScreen() {
   const [bankAccountId, setBankAccountId] = useState('');
   const [partitionId, setPartitionId] = useState('');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(todayISO());
+  const [date, setDate] = useState(todayLocalDate());
   const [note, setNote] = useState('');
 
   const [partitionsForAccount, setPartitionsForAccount] = useState([]);
@@ -125,7 +123,7 @@ export default function TransactionsScreen() {
     setBankAccountId('');
     setPartitionId('');
     setAmount('');
-    setDate(todayISO());
+    setDate(todayLocalDate());
     setNote('');
   };
 
@@ -143,7 +141,7 @@ export default function TransactionsScreen() {
     setBankAccountId(transaction.bankAccountId);
     setPartitionId(transaction.partitionId);
     setAmount(String(transaction.amount));
-    setDate(transaction.date);
+    setDate(normalizeDateKey(transaction.date) || todayLocalDate());
     setNote(transaction.note || '');
     setModalVisible(true);
   };
@@ -217,6 +215,7 @@ export default function TransactionsScreen() {
 
   return (
     <ScreenContainer>
+      <ScreenEnter fill>
       <View className="flex-1 px-6 pt-6">
         <ScreenHeader
           title="Transactions"
@@ -277,6 +276,7 @@ export default function TransactionsScreen() {
           </ScrollView>
         )}
       </View>
+      </ScreenEnter>
 
       <Fab onPress={openCreateModal} label="Add" accessibilityLabel="Add transaction" />
 

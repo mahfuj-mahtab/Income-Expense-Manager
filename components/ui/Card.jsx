@@ -1,9 +1,11 @@
 import { Pressable, View } from 'react-native';
 
-export function Card({ children, className = '', onPress }) {
+export function Card({ children, className = '', onPress, flush = false }) {
   const content = (
     <View
-      className={`rounded-2xl border border-border bg-surface p-4 shadow-card dark:border-border-dark dark:bg-surface-card ${className}`}>
+      className={`rounded-card border border-border/80 bg-surface shadow-card dark:border-border-dark dark:bg-surface-card ${
+        flush ? '' : 'p-4'
+      } ${className}`}>
       {children}
     </View>
   );

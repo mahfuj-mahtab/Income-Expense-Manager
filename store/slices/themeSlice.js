@@ -46,11 +46,11 @@ export async function persistThemePreference(preference) {
 }
 
 export function applyThemePreference(preference) {
-  if (preference === 'system') {
-    Appearance.setColorScheme(null);
-  } else {
-    Appearance.setColorScheme(preference);
+  const setColorScheme = Appearance.setColorScheme ?? Appearance.default?.setColorScheme;
+  if (typeof setColorScheme !== 'function') {
+    return;
   }
+  setColorScheme(preference === 'system' ? null : preference);
 }
 
 export default themeSlice.reducer;

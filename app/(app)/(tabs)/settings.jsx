@@ -15,6 +15,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { ModalSheet } from '@/components/ui/ModalSheet';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenEnter } from '@/components/ui/ScreenEnter';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -65,7 +66,7 @@ function CategorySection({
         {presets.map((cat) => (
           <View
             key={cat.id}
-            className="rounded-full border border-border bg-surface-bg px-3 py-2 dark:border-border-dark dark:bg-surface-dark">
+            className="rounded-full bg-surface-bg px-3 py-2 dark:bg-surface-dark">
             <Text className="text-sm text-content-secondary dark:text-gray-300">{cat.name}</Text>
           </View>
         ))}
@@ -78,7 +79,7 @@ function CategorySection({
             {customs.map((cat) => (
               <View
                 key={cat.$id}
-                className="flex-row items-center justify-between rounded-xl border border-border bg-surface-bg p-3 dark:border-border-dark dark:bg-surface-dark">
+                className="flex-row items-center justify-between rounded-2xl bg-surface-bg px-3 py-2.5 dark:bg-surface-dark">
                 <Text className="text-base text-content dark:text-white">{cat.name}</Text>
                 <View className="flex-row gap-2">
                   <IconButton
@@ -203,12 +204,13 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+        <ScreenEnter>
         <ScreenHeader title="Settings" subtitle="Manage your preferences" />
 
-        <Card className="mt-6">
-          <View className="flex-row items-center gap-4">
-            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-600/20">
-              <Text className="text-xl font-bold text-primary dark:text-primary-50">
+        <Card flush className="mt-6 overflow-hidden">
+          <View className="flex-row items-center gap-4 px-4 py-4">
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+              <Text className="text-xl font-bold text-white">
                 {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -224,19 +226,19 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </View>
-        </Card>
-
-        <Card className="mt-4">
-          <SectionHeader title="Appearance" />
-          <View className="flex-row flex-wrap gap-2">
-            {THEME_OPTIONS.map((option) => (
-              <Chip
-                key={option.id}
-                label={option.label}
-                selected={themePreference === option.id}
-                onPress={() => handleThemeChange(option.id)}
-              />
-            ))}
+          <View className="h-px bg-border dark:bg-border-dark" />
+          <View className="px-4 py-4">
+            <SectionHeader title="Appearance" className="mb-3" />
+            <View className="flex-row flex-wrap gap-2">
+              {THEME_OPTIONS.map((option) => (
+                <Chip
+                  key={option.id}
+                  label={option.label}
+                  selected={themePreference === option.id}
+                  onPress={() => handleThemeChange(option.id)}
+                />
+              ))}
+            </View>
           </View>
         </Card>
 
@@ -283,6 +285,7 @@ export default function SettingsScreen() {
         />
 
         <View className="h-8" />
+        </ScreenEnter>
       </ScrollView>
 
       <ModalSheet

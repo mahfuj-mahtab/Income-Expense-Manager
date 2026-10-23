@@ -5,7 +5,7 @@ export function Chip({ label, selected = false, onPress, disabled = false }) {
     <Pressable
       className={`rounded-full border px-4 py-2 ${
         selected
-          ? 'border-primary bg-primary-50 dark:border-primary-50 dark:bg-primary-600/20'
+          ? 'border-primary bg-primary'
           : 'border-border bg-surface dark:border-border-dark dark:bg-surface-card'
       } ${disabled ? 'opacity-50' : 'active:opacity-80'}`}
       onPress={onPress}
@@ -15,7 +15,7 @@ export function Chip({ label, selected = false, onPress, disabled = false }) {
       accessibilityState={{ selected }}>
       <Text
         className={`text-sm font-medium ${
-          selected ? 'text-primary dark:text-primary-50' : 'text-content-secondary dark:text-gray-300'
+          selected ? 'font-semibold text-white' : 'text-content-secondary dark:text-gray-300'
         }`}>
         {label}
       </Text>

@@ -17,6 +17,7 @@ import { FormField } from '@/components/ui/FormField';
 import { ModalSheet } from '@/components/ui/ModalSheet';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenEnter } from '@/components/ui/ScreenEnter';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import { ListItemSkeleton } from '@/components/ui/Skeleton';
@@ -148,6 +149,7 @@ export default function AccountsScreen() {
 
   return (
     <ScreenContainer>
+      <ScreenEnter fill>
       <View className="flex-1 px-6 pt-6">
         <ScreenHeader
           title="Accounts"
@@ -198,6 +200,7 @@ export default function AccountsScreen() {
           </ScrollView>
         )}
       </View>
+      </ScreenEnter>
 
       {items.length > 0 ? <Fab onPress={openCreateModal} accessibilityLabel="Add account" /> : null}
 

@@ -11,7 +11,7 @@ export function SecondaryButton({
     outline:
       'border border-border bg-surface dark:border-border-dark dark:bg-surface-card',
     ghost: 'bg-transparent',
-    danger: 'border border-expense-500 bg-expense-50 dark:bg-expense-500/10',
+    danger: 'border border-expense-500/40 bg-expense-50 dark:bg-expense-500/10',
   };
 
   const textVariants = {
@@ -22,7 +22,7 @@ export function SecondaryButton({
 
   return (
     <Pressable
-      className={`items-center rounded-xl px-4 py-3.5 ${variants[variant]} disabled:opacity-60 ${className}`}
+      className={`items-center rounded-2xl px-4 py-4 ${variants[variant]} disabled:opacity-60 ${className}`}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"

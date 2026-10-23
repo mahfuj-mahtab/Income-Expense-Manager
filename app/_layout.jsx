@@ -10,6 +10,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { cssInterop } from 'nativewind';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import '../global.css';
@@ -20,6 +22,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { store } from '@/store';
 import { useAppDispatch } from '@/store/hooks';
 import { initializeAuth } from '@/store/slices/authSlice';
+
+cssInterop(LinearGradient, { className: 'style' });
 
 SplashScreen.preventAutoHideAsync();
 

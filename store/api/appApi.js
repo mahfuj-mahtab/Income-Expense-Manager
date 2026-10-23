@@ -4,10 +4,20 @@ import {
     APPWRITE_DATABASE_ID,
     BANK_ACCOUNTS_TABLE_ID,
     CATEGORIES_TABLE_ID,
+    DEBT_REPAYMENTS_TABLE_ID,
+    DEBTS_TABLE_ID,
     PARTITIONS_TABLE_ID,
     tablesDB,
     TRANSACTIONS_TABLE_ID,
 } from '@/lib/appwrite/client';
+import {
+    canRepayDebt,
+    canTakeDebt,
+    debtStatus,
+    outstandingAmount,
+    roundMoney,
+} from '@/lib/debts/balance';
+import { normalizeDateKey } from '@/lib/ui/localDate';
 import {
     validateExpense,
 } from '@/lib/transactions/balance';
@@ -113,7 +123,7 @@ async function reverseBalanceDelta({ bankAccountId, partitionId, type, amount })
 export const appApi = createApi({
   reducerPath: 'appApi',
   baseQuery: fakeBaseQuery(),
-  tagTypes: ['BankAccount', 'Partition', 'Category', 'Transaction'],
+  tagTypes: ['BankAccount', 'Partition', 'Category', 'Transaction', 'Debt', 'DebtRepayment'],
   refetchOnMountOrArgChange: true,
   endpoints: (builder) => ({
     getBankAccounts: builder.query({
@@ -368,6 +378,20 @@ export const appApi = createApi({
             return queryError('Delete all transactions using this partition first.');
           }
 
+          const debtsResponse = await tablesDB.listRows({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            queries: [
+              Query.equal('partitionId', id),
+              Query.equal('userId', user.$id),
+              Query.limit(1),
+            ],
+          });
+
+          if (debtsResponse.rows.length > 0) {
+            return queryError('Delete all debts using this partition first.');
+          }
+
           await tablesDB.deleteRow({
             databaseId: APPWRITE_DATABASE_ID,
             tableId: PARTITIONS_TABLE_ID,
@@ -518,6 +542,10 @@ export const appApi = createApi({
             return queryError('Insufficient partition balance for this expense.');
           }
 
+          if (!normalizeDateKey(date)) {
+            return queryError('Choose a valid date.');
+          }
+
           const row = await tablesDB.createRow({
             databaseId: APPWRITE_DATABASE_ID,
             tableId: TRANSACTIONS_TABLE_ID,
@@ -531,7 +559,7 @@ export const appApi = createApi({
               partitionId,
               amount: Number(amount),
               note: note?.trim() || '',
-              date,
+              date: normalizeDateKey(date),
             },
             permissions: userPermissions(user.$id),
           });
@@ -593,6 +621,10 @@ export const appApi = createApi({
             return queryError('Insufficient partition balance for this expense.');
           }
 
+          if (!normalizeDateKey(date)) {
+            return queryError('Choose a valid date.');
+          }
+
           const row = await tablesDB.updateRow({
             databaseId: APPWRITE_DATABASE_ID,
             tableId: TRANSACTIONS_TABLE_ID,
@@ -605,7 +637,7 @@ export const appApi = createApi({
               partitionId,
               amount: Number(amount),
               note: note?.trim() || '',
-              date,
+              date: normalizeDateKey(date),
             },
           });
 
@@ -653,6 +685,241 @@ export const appApi = createApi({
       },
       invalidatesTags: ['Transaction', 'BankAccount', 'Partition'],
     }),
+
+    getDebts: builder.query({
+      async queryFn() {
+        try {
+          if (!DEBTS_TABLE_ID) {
+            return queryError('Debts table is not set up in Appwrite yet.');
+          }
+          const user = await getCurrentUser();
+          const response = await tablesDB.listRows({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            queries: [
+              Query.equal('userId', user.$id),
+              Query.orderDesc('date'),
+              Query.limit(100),
+            ],
+          });
+          return { data: response.rows };
+        } catch (error) {
+          return { error: { status: 400, data: getErrorMessage(error) } };
+        }
+      },
+      providesTags: ['Debt'],
+    }),
+
+    getDebtRepayments: builder.query({
+      async queryFn() {
+        try {
+          if (!DEBT_REPAYMENTS_TABLE_ID) {
+            return queryError('Debt repayments table is not set up in Appwrite yet.');
+          }
+          const user = await getCurrentUser();
+          const response = await tablesDB.listRows({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBT_REPAYMENTS_TABLE_ID,
+            queries: [
+              Query.equal('userId', user.$id),
+              Query.orderDesc('date'),
+              Query.limit(100),
+            ],
+          });
+          return { data: response.rows };
+        } catch (error) {
+          return { error: { status: 400, data: getErrorMessage(error) } };
+        }
+      },
+      providesTags: ['DebtRepayment'],
+    }),
+
+    createDebt: builder.mutation({
+      async queryFn({ person, bankAccountId, partitionId, amount, note, date }) {
+        try {
+          const user = await getCurrentUser();
+          const value = roundMoney(amount);
+          const dateKey = normalizeDateKey(date);
+          const personName = person?.trim() || '';
+
+          if (!personName) {
+            return queryError('Enter who this debt is with.');
+          }
+          if (!dateKey) {
+            return queryError('Choose a valid date.');
+          }
+          if (!(value > 0)) {
+            return queryError('Enter an amount greater than zero.');
+          }
+
+          const partitionRow = await tablesDB.getRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: PARTITIONS_TABLE_ID,
+            rowId: partitionId,
+          });
+
+          if (!canTakeDebt(partitionRow.balance, value)) {
+            return queryError(
+              Number(partitionRow.balance) <= 0
+                ? 'Cannot take a debt from a partition with no balance.'
+                : 'Debt amount cannot exceed the partition balance.'
+            );
+          }
+
+          const row = await tablesDB.createRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            rowId: ID.unique(),
+            data: {
+              userId: user.$id,
+              bankAccountId,
+              partitionId,
+              person: personName,
+              amount: value,
+              repaidAmount: 0,
+              note: note?.trim() || '',
+              date: dateKey,
+              status: 'open',
+            },
+            permissions: userPermissions(user.$id),
+          });
+
+          await applyBalanceDelta({
+            bankAccountId,
+            partitionId,
+            type: 'expense',
+            amount: value,
+          });
+
+          return { data: row };
+        } catch (error) {
+          return { error: { status: 400, data: getErrorMessage(error) } };
+        }
+      },
+      invalidatesTags: ['Debt', 'BankAccount', 'Partition'],
+    }),
+
+    repayDebt: builder.mutation({
+      async queryFn({ debtId, amount, note, date }) {
+        try {
+          const user = await getCurrentUser();
+          const value = roundMoney(amount);
+          const dateKey = normalizeDateKey(date);
+
+          if (!dateKey) {
+            return queryError('Choose a valid date.');
+          }
+          if (!(value > 0)) {
+            return queryError('Enter an amount greater than zero.');
+          }
+
+          const debt = await tablesDB.getRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            rowId: debtId,
+          });
+
+          const outstanding = outstandingAmount(debt.amount, debt.repaidAmount);
+          if (!canRepayDebt(outstanding, value)) {
+            return queryError('Repayment cannot exceed the outstanding debt.');
+          }
+
+          const repaidAmount = roundMoney(Number(debt.repaidAmount || 0) + value);
+          const status = debtStatus(debt.amount, repaidAmount);
+
+          await tablesDB.createRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBT_REPAYMENTS_TABLE_ID,
+            rowId: ID.unique(),
+            data: {
+              userId: user.$id,
+              debtId,
+              amount: value,
+              date: dateKey,
+              note: note?.trim() || '',
+            },
+            permissions: userPermissions(user.$id),
+          });
+
+          const row = await tablesDB.updateRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            rowId: debtId,
+            data: {
+              repaidAmount,
+              status,
+            },
+          });
+
+          await applyBalanceDelta({
+            bankAccountId: debt.bankAccountId,
+            partitionId: debt.partitionId,
+            type: 'income',
+            amount: value,
+          });
+
+          return { data: row };
+        } catch (error) {
+          return { error: { status: 400, data: getErrorMessage(error) } };
+        }
+      },
+      invalidatesTags: ['Debt', 'DebtRepayment', 'BankAccount', 'Partition'],
+    }),
+
+    deleteDebt: builder.mutation({
+      async queryFn(id) {
+        try {
+          const user = await getCurrentUser();
+          const debt = await tablesDB.getRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            rowId: id,
+          });
+
+          const outstanding = outstandingAmount(debt.amount, debt.repaidAmount);
+
+          const repaymentsResponse = await tablesDB.listRows({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBT_REPAYMENTS_TABLE_ID,
+            queries: [
+              Query.equal('debtId', id),
+              Query.equal('userId', user.$id),
+              Query.limit(100),
+            ],
+          });
+
+          await Promise.all(
+            repaymentsResponse.rows.map((repayment) =>
+              tablesDB.deleteRow({
+                databaseId: APPWRITE_DATABASE_ID,
+                tableId: DEBT_REPAYMENTS_TABLE_ID,
+                rowId: repayment.$id,
+              })
+            )
+          );
+
+          await tablesDB.deleteRow({
+            databaseId: APPWRITE_DATABASE_ID,
+            tableId: DEBTS_TABLE_ID,
+            rowId: id,
+          });
+
+          if (outstanding > 0) {
+            await applyBalanceDelta({
+              bankAccountId: debt.bankAccountId,
+              partitionId: debt.partitionId,
+              type: 'income',
+              amount: outstanding,
+            });
+          }
+
+          return { data: id };
+        } catch (error) {
+          return { error: { status: 400, data: getErrorMessage(error) } };
+        }
+      },
+      invalidatesTags: ['Debt', 'DebtRepayment', 'BankAccount', 'Partition'],
+    }),
   }),
 });
 
@@ -673,4 +940,9 @@ export const {
   useCreateTransactionMutation,
   useUpdateTransactionMutation,
   useDeleteTransactionMutation,
+  useGetDebtsQuery,
+  useGetDebtRepaymentsQuery,
+  useCreateDebtMutation,
+  useRepayDebtMutation,
+  useDeleteDebtMutation,
 } = appApi;

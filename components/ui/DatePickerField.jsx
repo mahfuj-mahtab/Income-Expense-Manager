@@ -3,14 +3,11 @@ import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
 import { TextInput } from '@/components/ui/TextInput';
-
-function formatDateISO(date) {
-  return date.toISOString().split('T')[0];
-}
+import { parseLocalDate, toLocalDateString } from '@/lib/ui/localDate';
 
 function formatDisplayDate(iso) {
-  if (!iso) return 'Select date';
-  const date = new Date(`${iso}T00:00:00`);
+  const date = parseLocalDate(iso);
+  if (!date) return 'Select date';
   return date.toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
@@ -21,14 +18,14 @@ function formatDisplayDate(iso) {
 
 export function DatePickerField({ label, value, onChange, disabled = false }) {
   const [showPicker, setShowPicker] = useState(false);
-  const dateValue = value ? new Date(`${value}T00:00:00`) : new Date();
+  const dateValue = parseLocalDate(value) ?? new Date();
 
   const handleChange = (_event, selectedDate) => {
     if (Platform.OS === 'android') {
       setShowPicker(false);
     }
     if (selectedDate) {
-      onChange(formatDateISO(selectedDate));
+      onChange(toLocalDateString(selectedDate));
     }
   };
 

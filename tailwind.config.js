@@ -10,6 +10,10 @@ module.exports = {
         semibold: ['Inter_600SemiBold'],
         bold: ['Inter_700Bold'],
       },
+      borderRadius: {
+        card: '22px',
+        sheet: '28px',
+      },
       colors: {
         primary: {
           DEFAULT: '#133458',
@@ -27,9 +31,9 @@ module.exports = {
           700: '#0F2A47',
         },
         income: {
-          50: '#DCFCE7',
-          500: '#16A34A',
-          600: '#15803D',
+          50: '#CCFBF1',
+          500: '#14B8A6',
+          600: '#0F766E',
         },
         expense: {
           50: '#FEE2E2',
@@ -43,7 +47,7 @@ module.exports = {
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          bg: '#F8FAFC',
+          bg: '#F4F7FB',
           dark: '#0F172A',
           card: '#1E293B',
         },
@@ -52,14 +56,14 @@ module.exports = {
           secondary: '#64748B',
         },
         border: {
-          DEFAULT: '#E2E8F0',
+          DEFAULT: '#E4EAF2',
           dark: '#334155',
         },
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgba(19, 52, 88, 0.06), 0 1px 2px -1px rgba(19, 52, 88, 0.06)',
-        elevated: '0 4px 16px 0 rgba(19, 52, 88, 0.1)',
-        glow: '0 4px 14px 0 rgba(19, 52, 88, 0.25)',
+        card: '0 10px 28px -16px rgba(19, 52, 88, 0.28)',
+        elevated: '0 18px 40px -18px rgba(11, 32, 54, 0.38)',
+        glow: '0 10px 24px -8px rgba(19, 52, 88, 0.5)',
       },
     },
   },

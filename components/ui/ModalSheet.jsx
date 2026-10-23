@@ -13,11 +13,16 @@ export function ModalSheet({
       animationType="slide"
       transparent
       onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
+      <View className="flex-1 justify-end bg-black/50">
         <Pressable className="flex-1" onPress={onClose} accessibilityLabel="Close modal" />
-        <View className="max-h-[90%] rounded-t-3xl bg-surface px-6 pb-8 pt-5 shadow-elevated dark:bg-surface-card">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-xl font-bold text-content dark:text-white">{title}</Text>
+        <View className="max-h-[90%] rounded-t-sheet bg-surface px-6 pb-8 pt-3 shadow-elevated dark:bg-surface-card">
+          <View className="mb-4 items-center">
+            <View className="h-1.5 w-10 rounded-full bg-border dark:bg-border-dark" />
+          </View>
+          <View className="mb-5 flex-row items-center justify-between">
+            <Text className="text-xl font-bold tracking-tight text-content dark:text-white">
+              {title}
+            </Text>
             <Pressable
               onPress={onClose}
               accessibilityRole="button"

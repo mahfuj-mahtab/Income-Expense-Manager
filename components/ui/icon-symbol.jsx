@@ -11,6 +11,7 @@ const MAPPING = {
   'creditcard.fill': 'credit-card',
   'list.bullet': 'list',
   'gearshape.fill': 'settings',
+  'banknote.fill': 'account-balance-wallet',
   plus: 'add',
   pencil: 'edit',
   trash: 'delete',

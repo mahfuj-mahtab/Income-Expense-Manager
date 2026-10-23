@@ -12,9 +12,9 @@ export function Fab({ onPress, label, accessibilityLabel = 'Add' }) {
       }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      className="absolute bottom-6 right-6 flex-row items-center gap-2 rounded-full bg-primary px-5 py-3.5 shadow-glow active:bg-primary-600">
+      className="absolute bottom-6 right-6 flex-row items-center gap-2 rounded-full bg-primary px-5 py-4 shadow-glow active:bg-primary-600">
       <IconSymbol name="plus" size={22} color="#FFFFFF" />
-      {label ? <Text className="font-semibold text-white">{label}</Text> : null}
+      {label ? <Text className="text-base font-semibold text-white">{label}</Text> : null}
     </Pressable>
   );
 }

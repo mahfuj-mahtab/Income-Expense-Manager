@@ -18,6 +18,7 @@ import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { ListItemSkeleton } from '@/components/ui/Skeleton';
+import { palette } from '@/constants/theme';
 import { formatCurrency } from '@/lib/accounts/formatCurrency';
 import {
     getPartitionsTotal,
@@ -54,7 +55,7 @@ function AllocationBar({ allocated, total, currency }) {
 
 function PartitionRow({ name, balance, currency, percentage, onEdit, onDelete }) {
   return (
-    <View className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card dark:border-border-dark dark:bg-surface-card">
+    <View className="overflow-hidden rounded-card border border-border/80 bg-surface shadow-card dark:border-border-dark dark:bg-surface-card">
       <View className="flex-row items-center gap-3 p-4">
         <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-600/20">
           <Text className="text-sm font-bold text-primary dark:text-primary-50">
@@ -215,10 +216,10 @@ export default function AccountDetailScreen() {
       <ScreenContainer>
         <ScrollView className="flex-1 px-6 pt-4" showsVerticalScrollIndicator={false}>
           <LinearGradient
-            colors={['#133458', '#1a4a7a', '#0F2A47']}
+            colors={palette.heroGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="overflow-hidden rounded-2xl shadow-elevated">
+            className="overflow-hidden rounded-sheet shadow-elevated">
             <View className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/10" />
             <View className="p-5">
               <Badge label={account.currency} variant="light" />
