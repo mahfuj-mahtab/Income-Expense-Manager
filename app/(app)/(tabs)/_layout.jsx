@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -10,16 +11,18 @@ function TabIcon({ name, color, focused, isDark }) {
   return (
     <View
       style={{
+        width: 40,
+        height: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 12,
         backgroundColor: focused
           ? isDark
             ? 'rgba(232, 240, 248, 0.12)'
             : palette.primaryLight
           : 'transparent',
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        paddingVertical: 4,
       }}>
-      <IconSymbol size={22} name={name} color={color} />
+      <IconSymbol size={28} name={name} color={color} />
     </View>
   );
 }
@@ -27,6 +30,8 @@ function TabIcon({ name, color, focused, isDark }) {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 8 : 10);
 
   return (
     <Tabs
@@ -39,9 +44,9 @@ export default function TabLayout() {
           backgroundColor: isDark ? palette.darkCard : palette.card,
           borderTopColor: isDark ? palette.darkBorder : palette.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 80 : 60,
-          paddingTop: 6,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 6,
+          height: 64 + bottomInset,
+          paddingTop: 8,
+          paddingBottom: bottomInset,
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
           ...Platform.select({
@@ -56,10 +61,13 @@ export default function TabLayout() {
             },
           }),
         },
+        tabBarItemStyle: {
+          paddingTop: 2,
+        },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: -2,
+          marginTop: 2,
         },
       }}>
       <Tabs.Screen

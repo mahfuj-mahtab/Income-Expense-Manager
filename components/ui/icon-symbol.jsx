@@ -19,6 +19,7 @@ const MAPPING = {
   'eye.slash': 'visibility-off',
   'arrow.up': 'north',
   'arrow.down': 'south',
+  checkmark: 'check',
 };
 
 /**

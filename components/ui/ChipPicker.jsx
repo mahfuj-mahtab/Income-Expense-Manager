@@ -1,5 +1,7 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { IconSymbol } from '@/components/ui/icon-symbol';
+
 export function ChipPicker({ label, options, value, onChange, disabled }) {
   return (
     <View>
@@ -15,9 +17,9 @@ export function ChipPicker({ label, options, value, onChange, disabled }) {
             return (
               <Pressable
                 key={option.id}
-                className={`rounded-full border px-3.5 py-2 ${
+                className={`flex-row items-center gap-1.5 rounded-full border px-3.5 py-2 ${
                   selected
-                    ? 'border-primary bg-primary-50 dark:bg-primary-600/20'
+                    ? 'border-primary bg-primary'
                     : 'border-border bg-surface dark:border-border-dark dark:bg-surface-card'
                 } ${disabled ? 'opacity-50' : 'active:opacity-80'}`}
                 onPress={() => onChange(option.id, option.name)}
@@ -25,11 +27,12 @@ export function ChipPicker({ label, options, value, onChange, disabled }) {
                 accessibilityRole="button"
                 accessibilityLabel={option.name}
                 accessibilityState={{ selected }}>
+                {selected ? <IconSymbol name="checkmark" size={14} color="#FFFFFF" /> : null}
                 <Text
-                  className={`text-sm font-medium ${
+                  className={`text-sm ${
                     selected
-                      ? 'text-primary dark:text-primary-50'
-                      : 'text-content-secondary dark:text-gray-300'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-content-secondary dark:text-gray-300'
                   }`}>
                   {option.name}
                 </Text>
