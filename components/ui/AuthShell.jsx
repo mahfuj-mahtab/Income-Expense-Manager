@@ -1,8 +1,8 @@
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BrandMark } from '@/components/ui/BrandMark';
 import { palette } from '@/constants/theme';
 
 export function AuthShell({ children, footer, tagline }) {
@@ -21,14 +21,8 @@ export function AuthShell({ children, footer, tagline }) {
             <View className="absolute -left-10 bottom-16 h-28 w-28 rounded-full bg-white/10" />
 
             <View className="mb-8">
-              <Image
-                source={require('../../assets/logo.png')}
-                style={{ width: 88, height: 88 }}
-                contentFit="contain"
-              />
-              <Text className="mt-4 text-3xl font-bold tracking-tight text-white">
-                MyMoneyPlan
-              </Text>
+              <BrandMark size={84} />
+              <Text className="mt-5 text-3xl font-bold tracking-tight text-white">Money Plan</Text>
               <Text className="mt-2 text-base text-white/75">{tagline}</Text>
             </View>
 

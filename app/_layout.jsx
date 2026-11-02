@@ -9,14 +9,16 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
-import 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import '../global.css';
 
 import { ThemeBootstrap } from '@/components/ThemeBootstrap';
+import { LaunchSplash } from '@/components/ui/SplashScreen';
 import { NavigationTheme } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { store } from '@/store';
@@ -77,15 +79,45 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [showSplash, setShowSplash] = useState(true);
+  const splashOpacity = useSharedValue(1);
+  const nativeHidden = useRef(false);
+
+  const hideNativeSplash = useCallback(() => {
+    if (nativeHidden.current) return;
+    nativeHidden.current = true;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    if (!fontsLoaded && !fontError) return undefined;
 
-  if (!fontsLoaded && !fontError) {
-    return null;
+    const fadeTimer = setTimeout(() => {
+      splashOpacity.value = withTiming(0, { duration: 400 });
+    }, 600);
+    const doneTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1000);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(doneTimer);
+    };
+  }, [fontError, fontsLoaded, splashOpacity]);
+
+  const splashStyle = useAnimatedStyle(() => ({
+    opacity: splashOpacity.value,
+  }));
+
+  if (showSplash) {
+    return (
+      <View className="flex-1" style={{ backgroundColor: '#071E33' }}>
+        <StatusBar style="light" />
+        <Animated.View style={[{ flex: 1 }, splashStyle]}>
+          <LaunchSplash fontsReady={Boolean(fontsLoaded)} onLayout={hideNativeSplash} />
+        </Animated.View>
+      </View>
+    );
   }
 
   return (
